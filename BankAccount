@@ -1,0 +1,209 @@
+class BankAccount {
+    private String accountNumber;
+    private String accountHolder;
+    private double balance;
+    private static int totalAccounts = 0;
+    
+    public BankAccount(String accountHolder, double initialBalance) {
+        this.accountNumber = "ACC" + (++totalAccounts);
+        this.accountHolder = accountHolder;
+        this.balance = initialBalance;
+    }
+    
+    public void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+            System.out.println("Deposited: $" + amount);
+        } else {
+            System.out.println("Invalid deposit amount");
+        }
+    }
+    
+    public void withdraw(double amount) {
+        if (amount > 0 && amount <= balance) {
+            balance -= amount;
+            System.out.println("Withdrawn: $" + amount);
+        } else if (amount > balance) {
+            System.out.println("Insufficient balance");
+        } else {
+            System.out.println("Invalid withdrawal amount");
+        }
+    }
+    
+    public double getBalance() {
+        return balance;
+    }
+    
+    public void displayAccountInfo() {
+        System.out.println("Account: " + accountNumber + ", Holder: " + accountHolder + ", Balance: $" + balance);
+    }
+    
+    public static int getTotalAccounts() {
+        return totalAccounts;
+    }
+}
+
+class SavingsAccount extends BankAccount {
+    private double interestRate;
+    
+    public SavingsAccount(String accountHolder, double initialBalance, double interestRate) {
+        super(accountHolder, initialBalance);
+        this.interestRate = interestRate;
+    }
+    
+    public void addInterest() {
+        double interest = getBalance() * interestRate / 100;
+        deposit(interest);
+        System.out.println("Interest added: $" + interest + " at rate " + interestRate + "%");
+    }
+    
+    @Override
+    public void withdraw(double amount) {
+        if (getBalance() - amount >= 100) {
+            super.withdraw(amount);
+        } else {
+            System.out.println("Minimum balance of $100 required");
+        }
+    }
+}
+
+class CurrentAccount extends BankAccount {
+    private double overdraftLimit;
+    
+    public CurrentAccount(String accountHolder, double initialBalance, double overdraftLimit) {
+        super(accountHolder, initialBalance);
+        this.overdraftLimit = overdraftLimit;
+    }
+    
+    @Override
+    public void withdraw(double amount) {
+        if (amount > 0 && amount <= getBalance() + overdraftLimit) {
+            double newBalance = getBalance() - amount;
+            System.out.println("Withdrawn: $" + amount);
+            if (newBalance < 0) {
+                System.out.println("Overdraft used: $" + Math.abs(newBalance));
+            }
+        } else if (amount > getBalance() + overdraftLimit) {
+            System.out.println("Exceeds overdraft limit");
+        } else {
+            System.out.println("Invalid withdrawal amount");
+        }
+    }
+}
+
+interface Transaction {
+    void processTransaction(double amount);
+    String getTransactionType();
+}
+
+class DepositTransaction implements Transaction {
+    private String transactionId;
+    
+    public DepositTransaction(String transactionId) {
+        this.transactionId = transactionId;
+    }
+    
+    @Override
+    public void processTransaction(double amount) {
+        System.out.println("Processing deposit transaction " + transactionId + " of $" + amount);
+    }
+    
+    @Override
+    public String getTransactionType() {
+        return "DEPOSIT";
+    }
+}
+
+class WithdrawTransaction implements Transaction {
+    private String transactionId;
+    
+    public WithdrawTransaction(String transactionId) {
+        this.transactionId = transactionId;
+    }
+    
+    @Override
+    public void processTransaction(double amount) {
+        System.out.println("Processing withdrawal transaction " + transactionId + " of $" + amount);
+    }
+    
+    @Override
+    public String getTransactionType() {
+        return "WITHDRAWAL";
+    }
+}
+
+class Bank {
+    private String bankName;
+    private BankAccount[] accounts;
+    private int accountCount;
+    
+    public Bank(String bankName, int maxAccounts) {
+        this.bankName = bankName;
+        this.accounts = new BankAccount[maxAccounts];
+        this.accountCount = 0;
+    }
+    
+    public void addAccount(BankAccount account) {
+        if (accountCount < accounts.length) {
+            accounts[accountCount] = account;
+            accountCount++;
+            System.out.println("Account added successfully");
+        } else {
+            System.out.println("Bank is full");
+        }
+    }
+    
+    public void displayAllAccounts() {
+        System.out.println("Bank: " + bankName);
+        for (int i = 0; i < accountCount; i++) {
+            accounts[i].displayAccountInfo();
+        }
+    }
+    
+    public double getTotalBankBalance() {
+        double total = 0;
+        for (int i = 0; i < accountCount; i++) {
+            total += accounts[i].getBalance();
+        }
+        return total;
+    }
+}
+
+public class OOPDemo {
+    public static void main(String[] args) {
+        Bank bank = new Bank("Central Bank", 10);
+        
+        SavingsAccount savings = new SavingsAccount("John Doe", 1000, 5.0);
+        CurrentAccount current = new CurrentAccount("Jane Smith", 500, 200);
+        
+        bank.addAccount(savings);
+        bank.addAccount(current);
+        
+        savings.displayAccountInfo();
+        savings.deposit(200);
+        savings.addInterest();
+        savings.withdraw(1100);
+        savings.displayAccountInfo();
+        
+        System.out.println();
+        
+        current.displayAccountInfo();
+        current.withdraw(600);
+        current.withdraw(200);
+        current.displayAccountInfo();
+        
+        System.out.println();
+        
+        Transaction deposit = new DepositTransaction("TXN001");
+        Transaction withdraw = new WithdrawTransaction("TXN002");
+        
+        deposit.processTransaction(500);
+        withdraw.processTransaction(300);
+        
+        System.out.println();
+        
+        bank.displayAllAccounts();
+        System.out.println("Total Bank Balance: $" + bank.getTotalBankBalance());
+        System.out.println("Total Accounts Created: " + BankAccount.getTotalAccounts());
+    }
+}
